@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+uv.lock
+
+# IDE
+.idea/
+
+# SDD docs (working tree only; never committed)
+docs/
+
+# Secrets (not used in this project; kept as a guard)
+.env
+
+# Run outputs
+data/
+data.jsonl
+data.seen.jsonl
+results/
+.state.json
+*.log

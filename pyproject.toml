@@ -1,0 +1,5 @@
+[project]
+name = "web-scraping-pipeline"
+version = "0.1.0"
+description = "Web scraping CLI with retries, proxy rotation, optional headless rendering and JSONL output with dedupe"
+requires-python = ">=3.11"
