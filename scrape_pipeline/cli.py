@@ -1,11 +1,13 @@
 """Command-line interface: argument parsing, validation and entry point."""
 
 import argparse
+import json
 import logging
 import sys
 from urllib.parse import urlsplit
 
 from .config import DEFAULT_MAX_PAGES, RunConfig
+from .pipeline import run_pipeline
 
 log = logging.getLogger("scrape_pipeline")
 
@@ -67,8 +69,16 @@ def configure_logging(cfg: RunConfig) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """CLI entry point (stage S1 stub; the final body lands in stage S2)."""
+    """CLI entry point: build the config, run the pipeline, return exit code."""
     cfg = build_config(argv)
     configure_logging(cfg)
-    log.info("scaffold: pipeline not implemented yet")
-    return 1
+    try:
+        stats = run_pipeline(cfg)
+    except KeyboardInterrupt:
+        log.warning("interrupted by user")
+        return 130
+    except OSError as exc:
+        log.error("%s", exc)
+        return 2
+    print(json.dumps(stats.as_dict()), file=sys.stderr)
+    return 0 if (stats.ok > 0 or stats.skipped_dup > 0) else 1
