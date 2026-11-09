@@ -1,0 +1,7 @@
+# One proxy per line. Format: scheme://user:password@host:port
+# Supported schemes: http, https, socks5
+# Blank lines and lines starting with '#' are ignored.
+#
+# Example entries (DO NOT use — replace with your own proxies):
+http://user-01:secret-01@proxy-a.example.com:8080
+http://user-02:secret-02@proxy-b.example.com:8081

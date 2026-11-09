@@ -4,6 +4,7 @@ import argparse
 import json
 import logging
 import sys
+from pathlib import Path
 from urllib.parse import urlsplit
 
 from .config import DEFAULT_MAX_PAGES, RunConfig
@@ -35,6 +36,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Maximum number of catalogue pages to follow (default: %(default)s).",
     )
     parser.add_argument(
+        "--proxy-file",
+        type=Path,
+        default=None,
+        metavar="PATH",
+        help="File with one proxy URL per line.",
+    )
+    parser.add_argument(
         "--verbose",
         action="store_true",
         help="Enable debug logging.",
@@ -51,9 +59,12 @@ def build_config(argv: list[str] | None = None) -> RunConfig:
         parser.error(f"--start-url must be an http(s):// URL, got: {scheme or 'none'}")
     if args.max_pages < 1:
         parser.error("--max-pages must be >= 1")
+    if args.proxy_file is not None and not args.proxy_file.is_file():
+        parser.error(f"proxy file not found: {args.proxy_file}")
     return RunConfig(
         start_url=args.start_url,
         max_pages=args.max_pages,
+        proxy_file=args.proxy_file,
         verbose=args.verbose,
     )
 
