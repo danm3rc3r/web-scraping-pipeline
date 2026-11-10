@@ -7,7 +7,15 @@ import sys
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from .config import DEFAULT_MAX_PAGES, RunConfig
+from .config import (
+    DEFAULT_DELAY_MAX_S,
+    DEFAULT_DELAY_MIN_S,
+    DEFAULT_GLOBAL_TIMEOUT_S,
+    DEFAULT_MAX_BOOKS,
+    DEFAULT_MAX_PAGES,
+    DEFAULT_RETRIES,
+    RunConfig,
+)
 from .pipeline import run_pipeline
 
 log = logging.getLogger("scrape_pipeline")
@@ -50,6 +58,39 @@ def build_parser() -> argparse.ArgumentParser:
              "when Playwright is unavailable).",
     )
     parser.add_argument(
+        "--out",
+        type=Path,
+        default=Path("data.jsonl"),
+        metavar="PATH",
+        help="JSONL output file (default: data.jsonl).",
+    )
+    parser.add_argument(
+        "--max-books",
+        type=int,
+        default=DEFAULT_MAX_BOOKS,
+        help="Budget of catalogue entries processed (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--delay",
+        type=float,
+        nargs=2,
+        default=[DEFAULT_DELAY_MIN_S, DEFAULT_DELAY_MAX_S],
+        metavar=("MIN_S", "MAX_S"),
+        help="Politeness delay range in seconds, MIN then MAX.",
+    )
+    parser.add_argument(
+        "--retries",
+        type=int,
+        default=DEFAULT_RETRIES,
+        help="Extra retry attempts for transient HTTP errors (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--timeout",
+        type=float,
+        default=DEFAULT_GLOBAL_TIMEOUT_S,
+        help="Global run timeout in seconds (default: %(default)s).",
+    )
+    parser.add_argument(
         "--verbose",
         action="store_true",
         help="Enable debug logging.",
@@ -68,9 +109,23 @@ def build_config(argv: list[str] | None = None) -> RunConfig:
         parser.error("--max-pages must be >= 1")
     if args.proxy_file is not None and not args.proxy_file.is_file():
         parser.error(f"proxy file not found: {args.proxy_file}")
+    if args.max_books < 1:
+        parser.error("--max-books must be >= 1")
+    if args.delay[0] <= 0 or args.delay[1] <= 0 or args.delay[0] > args.delay[1]:
+        parser.error("--delay requires MIN <= MAX and both values > 0")
+    if args.retries < 0:
+        parser.error("--retries must be >= 0")
+    if args.timeout < 1:
+        parser.error("--timeout must be >= 1")
     return RunConfig(
         start_url=args.start_url,
         max_pages=args.max_pages,
+        max_books=args.max_books,
+        out=args.out,
+        delay_min_s=args.delay[0],
+        delay_max_s=args.delay[1],
+        retries=args.retries,
+        global_timeout_s=args.timeout,
         proxy_file=args.proxy_file,
         headless=args.headless,
         verbose=args.verbose,
