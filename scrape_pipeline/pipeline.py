@@ -6,9 +6,21 @@ import time
 
 from .config import RunConfig, RunStats
 from .fetcher import FetchError, HttpFetcher
+from .headless import HeadlessFetcher, HeadlessUnavailable
 from .parser import parse_catalog_page, parse_next_link
 
 log = logging.getLogger("scrape_pipeline")
+
+
+def _make_source(cfg: RunConfig) -> HttpFetcher | HeadlessFetcher:
+    """Choose the page source: headless when enabled, HTTP fallback (D5)."""
+    if not cfg.headless:
+        return HttpFetcher(cfg)
+    try:
+        return HeadlessFetcher()
+    except HeadlessUnavailable as exc:
+        log.warning("headless unavailable (%s); falling back to HTTP", exc)
+        return HttpFetcher(cfg)
 
 
 def run_pipeline(cfg: RunConfig) -> RunStats:
@@ -19,7 +31,7 @@ def run_pipeline(cfg: RunConfig) -> RunStats:
     """
     start = time.monotonic()
     stats = RunStats()
-    source = HttpFetcher(cfg)
+    source = _make_source(cfg)
     try:
         next_url: str | None = cfg.start_url
         for page_no in range(1, cfg.max_pages + 1):

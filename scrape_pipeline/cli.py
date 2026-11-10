@@ -43,6 +43,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="File with one proxy URL per line.",
     )
     parser.add_argument(
+        "--headless",
+        action="store_true",
+        help="Render pages with headless Chromium "
+             "(requires requirements-headless.txt; falls back to HTTP "
+             "when Playwright is unavailable).",
+    )
+    parser.add_argument(
         "--verbose",
         action="store_true",
         help="Enable debug logging.",
@@ -65,6 +72,7 @@ def build_config(argv: list[str] | None = None) -> RunConfig:
         start_url=args.start_url,
         max_pages=args.max_pages,
         proxy_file=args.proxy_file,
+        headless=args.headless,
         verbose=args.verbose,
     )
 
